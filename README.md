@@ -69,6 +69,12 @@ python main.py --test --imgpath=/path/to/img.jpg --modelpath=log/vgg16CAM_calt25
 ```
 This will save a result figure in this directory.
 
+## Some results
+
+![guitar](https://github.com/markdtw/class-activation-mapping/blob/master/result/kaleo.jpg)
+![monkey](https://github.com/markdtw/class-activation-mapping/blob/master/result/monkey.jpg)
+![baseball player](https://github.com/markdtw/class-activation-mapping/blob/master/result/ortiz.jpg)
+
 
 ## Others
 - First time training will generate `calt256_224_224.tfrecords` file to your `CALTECH256/` folder to load data in queue.
