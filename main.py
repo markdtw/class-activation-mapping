@@ -9,6 +9,7 @@ import argparse
 import scipy.misc
 import numpy as np
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 from vgg import VGG16_GAP
 from utils import CALTECH256_loader
@@ -39,10 +40,20 @@ def test(args):
         print ('Using pretrained caffemodel')
 
     feed_dict = {image_ph: image}
-    cam, gap, logits = sess.run([model.cam, model.gap, model.logits], feed_dict=feed_dict)
+    logits, CAM_conv_resize, CAM_fc = sess.run([
+        model.cam_fc, model.cam_conv_resize, model.cam_fc_value], feed_dict=feed_dict)
     pred = np.argmax(logits)
-
     pdb.set_trace()
+
+    CAM_heatmap = np.matmul(CAM_conv_resize.reshape(-1, 1024), CAM_fc.transpose()[pred])
+    CAM_heatmap = np.reshape(CAM_heatmap, [224, 224])
+    
+    fig = plt.figure()
+    plt.imshow(image.squeeze())
+    plt.imshow(CAM_heatmap, cmap=plt.cm.jet, alpha=0.5, interpolation='bilinear')
+    #plt.show()
+    fig.savefig(os.path.join('result', args.imgpath.split('/')[-1]))
+
     sess.close()
     print ('Bye')
 
@@ -66,6 +77,10 @@ def train(args):
     writer = tf.summary.FileWriter('log', sess.graph)
     sess.run(tf.group(tf.global_variables_initializer(), tf.local_variables_initializer()))
 
+    if args.modelpath is not None:
+        print ('Using model: {}'.format(args.modelpath))
+        saver.restore(sess, args.modelpath)
+
     print ('Start training')
     print ('batch size: %d, epoch: %d, initial learning rate: %.3f' % (args.bsize, args.ep, args.lr))
     coord = tf.train.Coordinator()
@@ -77,7 +92,7 @@ def train(args):
         correct_all = 0
         while not coord.should_stop():
             logits, xloss, rloss, loss, correct, _, summary = sess.run([
-                model.logits, model.xen_loss_op, model.reg_loss_op, model.loss_op, 
+                model.cam_fc, model.xen_loss_op, model.reg_loss_op, model.loss_op, 
                 model.correct_op, train_op, merged_op
             ])
             writer.add_summary(summary, ep * queue_loader.num_batches + step)
@@ -110,7 +125,7 @@ if __name__ == '__main__':
     parser.add_argument('--train', action='store_true', help='set this to train.')
     parser.add_argument('--test', action='store_true', help='set this to test.')
     parser.add_argument('--lr', metavar='', type=float, default=1e-3, help='learning rate.')
-    parser.add_argument('--ep', metavar='', type=int, default=40, help='number of epochs.')
+    parser.add_argument('--ep', metavar='', type=int, default=180, help='number of epochs.')
     parser.add_argument('--bsize', metavar='', type=int, default=64, help='batch size.')
     parser.add_argument('--modelpath', metavar='', type=str, default=None, help='trained tensorflow model path.')
     parser.add_argument('--imgpath', metavar='', type=str, default=None, help='Test image path.')
