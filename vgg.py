@@ -52,12 +52,18 @@ class VGG16_GAP:
         net = self.conv_layer(net, 3, 512, 512, 'conv5_2')
         net = self.conv_layer(net, 3, 512, 512, 'conv5_3')
 
-        self.cam = self.conv_layer(net, 3, 512, 1024, 'CAM_conv')
-        self.gap = tf.reduce_mean(self.cam, [1, 2], name='CAM_GAP')
-        if self.train_mode:
-            self.gap = tf.nn.dropout(self.gap, 0.5)
+        with tf.variable_scope('CAM'):
+            self.cam_conv = self.conv_layer(net, 3, 512, 1024, 'CAM_conv')
+            self.gap = tf.reduce_mean(self.cam_conv, [1, 2], name='CAM_GAP')
+            if self.train_mode:
+                self.gap = tf.nn.dropout(self.gap, 0.5)
 
-        self.logits = self.fc_layer(self.gap, 1024, self.n_labels, 'CAM_fc')
+            self.cam_fc = self.fc_layer(self.gap, 1024, self.n_labels, 'CAM_fc')
+
+        with tf.variable_scope('CAM', reuse=True):
+            self.cam_conv_resize = tf.image.resize_images(self.cam_conv, [224, 224])
+            self.cam_fc_value = tf.nn.bias_add(tf.get_variable('CAM_fc_w'), tf.get_variable('CAM_fc_b'))
+
 
     def loss(self, labels):
         self.xen_loss_op = tf.losses.sparse_softmax_cross_entropy(labels, self.logits)
