@@ -6,10 +6,11 @@ Caffe version by the author is [here](https://github.com/metalbubble/CAM)
 ## Prerequisites
 - Python 2.7+
 - [NumPy](http://www.numpy.org/)
-- [Scipy](https://www.scipy.org/)
+- [SciPy](https://www.scipy.org/)
 - [tqdm](https://pypi.python.org/pypi/tqdm)
 - [Tensorflow r1.0+](https://www.tensorflow.org/install/)
 - [Caffe](https://github.com/bvlc/caffe) (only for extracting parameters from pre-trained model)
+- [matplotlib](https://matplotlib.org/index.html) (for plotting the result)
 
 
 ## Data
@@ -48,6 +49,10 @@ Train (fine-tune) CALTECH256 from `VGG_ILSVRC_16_layers` with default settings:
 ```bash
 python main.py --train
 ```
+Train (fine-tune) CALTECH256 from previous checkpoint:
+```bash
+python main.py --train --modelpath=log/vgg16CAM_calt256-X
+```
 Check out tunable arguments:
 ```bash
 python main.py
@@ -60,9 +65,9 @@ python main.py --test --imgpath=/path/to/img.jpg
 ```
 Test the model trained on CALTECH256 by you given epoch X
 ```bash
-python main.py --test --imgpath=/path/to/img.jpg --modelpath=log/vgg16CAM_cal256-X
+python main.py --test --imgpath=/path/to/img.jpg --modelpath=log/vgg16CAM_calt256-X
 ```
-_*Activation map plotting is not yet implemented so I set a breakpoint for you_
+This will save a result figure in this directory.
 
 
 ## Others
